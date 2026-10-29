@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -66,15 +67,19 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Badge variant="outline" className="gap-1.5 py-1 px-3">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              Sẵn sàng phát triển
-            </Badge>
-            <Avatar size="sm">
-              <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=faces" alt="User avatar" />
-              <AvatarFallback>FE</AvatarFallback>
-            </Avatar>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              Đăng nhập
+            </Link>
+            <Link
+              href="/register"
+              className={buttonVariants({ variant: "default", size: "sm" })}
+            >
+              Đăng ký
+            </Link>
           </div>
         </div>
       </header>
@@ -98,17 +103,18 @@ export default function Home() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-            <Button size="lg" className="gap-2 cursor-pointer shadow-md">
-              Bắt đầu ngay <ArrowRight className="size-4" />
-            </Button>
-            <a
-              href="https://ui.shadcn.com"
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/register"
+              className={buttonVariants({ variant: "default", size: "lg" }) + " gap-2 cursor-pointer shadow-md"}
+            >
+              Trang Đăng ký (/register) <ArrowRight className="size-4" />
+            </Link>
+            <Link
+              href="/login"
               className={buttonVariants({ variant: "outline", size: "lg" }) + " gap-2 cursor-pointer"}
             >
-              Tài liệu ShadCN <ExternalLink className="size-4" />
-            </a>
+              Trang Đăng nhập (/login)
+            </Link>
           </div>
         </div>
 
