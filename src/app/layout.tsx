@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Expense Management App",
+  title: "",
   description: "Next.js + Tailwind CSS + ShadCN UI + Supabase",
 };
 
