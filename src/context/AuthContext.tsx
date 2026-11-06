@@ -26,6 +26,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+    }).catch(() => {
+      setSession(null);
+      setUser(null);
+      setLoading(false);
     });
 
     // Lắng nghe thay đổi trạng thái đăng nhập
