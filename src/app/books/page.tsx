@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, BookOpen, Check, Plus, Search, Trash2 } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -27,13 +27,27 @@ function validate(values: typeof blank): FormErrors {
 
 export default function BooksPage() {
   const { user, loading: authLoading } = useAuth(); const { books, loading, addBook, updateStatus, deleteBook } = useBooks(); const router = useRouter();
+  const userId = user?.id;
   const [values, setValues] = useState(blank); const [errors, setErrors] = useState<FormErrors>({ title: "", author: "", pages: "", status: "" }); const [submitted, setSubmitted] = useState(false); const [bookError, setBookError] = useState(""); const [success, setSuccess] = useState(""); const [busy, setBusy] = useState(false); const [filter, setFilter] = useState(""); const [query, setQuery] = useState(""); const [actionError, setActionError] = useState("");
+  const currentUserId = useRef<string | null>(user?.id ?? null);
+  currentUserId.current = user?.id ?? null;
   useEffect(() => { if (!authLoading && !user) router.replace("/login"); }, [authLoading, user, router]);
+  useEffect(() => {
+    setValues(blank);
+    setErrors({ title: "", author: "", pages: "", status: "" });
+    setSubmitted(false);
+    setBookError("");
+    setSuccess("");
+    setBusy(false);
+    setFilter("");
+    setQuery("");
+    setActionError("");
+  }, [user?.id]);
   const shown = useMemo(() => { const needle = query.trim().toLocaleLowerCase(); return books.filter((book) => (!filter || book.status === filter) && (!needle || book.title.toLocaleLowerCase().includes(needle) || book.author.toLocaleLowerCase().includes(needle))); }, [books, filter, query]);
   const breakdown = useMemo(() => statuses.map((status, index) => ({ status, index, count: shown.filter((book) => book.status === status).length })).filter((row) => row.count > 0).sort((a, b) => b.count - a.count || a.index - b.index), [shown]);
   const field = (key: keyof typeof blank, value: string) => { const next = { ...values, [key]: value }; setValues(next); if (submitted) setErrors((prior) => ({ ...prior, [key]: validate(next)[key] })); };
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); setSubmitted(true); setSuccess(""); setBookError(""); const next = validate(values); setErrors(next); if (Object.values(next).some(Boolean)) return; setBusy(true); const error = await addBook({ title: values.title.trim(), author: values.author.trim(), pages: Number(values.pages), status: values.status as BookStatus }); setBusy(false); if (error) setBookError(error); else { setValues(blank); setErrors({ title: "", author: "", pages: "", status: "" }); setSubmitted(false); setSuccess("Book added"); } };
-  const mutate = async (operation: () => Promise<string | null>) => { setActionError(""); const error = await operation(); if (error) setActionError(error); };
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); setSubmitted(true); setSuccess(""); setBookError(""); const next = validate(values); setErrors(next); if (Object.values(next).some(Boolean) || !userId) return; const submittedBy = userId; setBusy(true); try { const error = await addBook({ title: values.title.trim(), author: values.author.trim(), pages: Number(values.pages), status: values.status as BookStatus }); if (currentUserId.current !== submittedBy) return; setBusy(false); if (error) setBookError(error); else { setValues(blank); setErrors({ title: "", author: "", pages: "", status: "" }); setSubmitted(false); setSuccess("Book added"); } } catch (error) { if (currentUserId.current === submittedBy) { setBusy(false); setBookError(error instanceof Error ? error.message : "Unable to add this book."); } } };
+  const mutate = async (operation: () => Promise<string | null>) => { if (!userId) return; const actedBy = userId; setActionError(""); try { const error = await operation(); if (currentUserId.current === actedBy && error) setActionError(error); } catch (error) { if (currentUserId.current === actedBy) setActionError(error instanceof Error ? error.message : "Unable to update your shelf."); } };
   if (authLoading || !user) return <div className="min-h-screen bg-[#fffdf9]" aria-hidden="true" />;
 
   return <div className="min-h-screen bg-[#fffdf9] text-stone-900"><SiteHeader /><main data-testid="books-page" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
